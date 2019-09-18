@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/ddc
+ddc.so
+ddc.dylib
+ddc.dll
+ddc.a
+ddc.lib
+ddc-test-*
+*.exe
+*.o
+*.obj
+*.lst
