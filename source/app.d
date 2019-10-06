@@ -8,6 +8,7 @@ import std.range;
 import std.getopt;
 import std.format;
 import core.stdc.stdlib : exit;
+import dcvm;
 
 const string DDC_VERSION = "0.0.1";
 
@@ -21,89 +22,6 @@ void versionHandler(string _)
     writefln("ddc %s", DDC_VERSION);
     writeln("Copyright (C) 2019- by theoremoon.");
     exit(0);
-}
-
-DCNum getnum(R)(R input) if (isInputRange!(R))
-{
-    const base = 10;
-
-    while (input.front.isWhite)
-    {
-        input.popFront();
-    }
-
-    char uniop = 0;
-    if (input.front == '_' || input.front == '-')
-    {
-        uniop = input.front;
-        input.popFront();
-    }
-    else if (input.front == '+')
-    {
-        input.popFront();
-    }
-
-    while (input.front.isWhite)
-    {
-        input.popFront();
-    }
-
-    int digit = 0;
-    auto v = DCNum(0);
-    while (!input.empty)
-    {
-        if (input.front.isDigit)
-        {
-            digit = input.front - '0';
-        }
-        else if ('A' <= input.front && input.front <= 'F')
-        {
-            digit = 10 + input.front - 'A';
-        }
-        else
-        {
-            break;
-        }
-        v = v * DCNum(base) + DCNum(digit);
-        input.popFront();
-    }
-    if (input.front == '.')
-    {
-        input.popFront();
-        auto scale = 0;
-        while (!input.empty)
-        {
-            if (input.front.isDigit)
-            {
-                digit = input.front - '0';
-            }
-            else if ('A' <= input.front && input.front <= 'F')
-            {
-                digit = 10 + input.front - 'A';
-            }
-            else
-            {
-                break;
-            }
-
-            v = v * DCNum(base) + DCNum(digit);
-            scale++;
-            input.popFront();
-        }
-        auto divisor = DCNum(1);
-        foreach (_; 0 .. scale)
-        {
-            divisor = divisor * DCNum(base);
-        }
-        v.div_scale = scale;
-        v = v / divisor;
-    }
-
-    if (uniop)
-    {
-        v = DCNum(0) - v;
-    }
-    return v;
 }
 
 void main(string[] args)
@@ -124,13 +42,13 @@ void main(string[] args)
         stderr.writeln(HELPMESSAGE);
         exit(1);
     }
+    auto vm = new DCVM();
 
-    foreach (f; files)
+    foreach (f; files ~ args[1 .. $])
     {
-        writeln(getnum(readText(f).byChar));
-    }
-    foreach (f; args[1 .. $])
-    {
-        writeln(getnum(readText(f).byChar));
+        foreach (line; File(f).byLine)
+        {
+            vm.evalLine(line.dup);
+        }
     }
 }
