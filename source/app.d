@@ -45,7 +45,22 @@ void main(string[] args)
     auto vm = newVM();
     foreach (f; files ~ args[1 .. $])
     {
-        foreach (line; File(f).byLine)
+        try
+        {
+            foreach (line; File(f).byLine)
+            {
+                vm.evalLine(line.dup);
+            }
+        }
+        catch (FileException)
+        {
+            stderr.writeln("Could not open file %s".format(f));
+        }
+
+    }
+    if (!(files ~ args[1 .. $]))
+    {
+        foreach (line; stdin.byLine)
         {
             vm.evalLine(line.dup);
         }

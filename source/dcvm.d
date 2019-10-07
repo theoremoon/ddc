@@ -18,15 +18,15 @@ Tuple!(long, DCNum) parseNumber(string s, long p)
     }
 
     long save = p;
-    while (s[p].isDigit)
+    while (p < s.length && s[p].isDigit)
     {
         p++;
     }
-    if (s[p] == '.')
+    if (p < s.length && s[p] == '.')
     {
         p++;
     }
-    while (s[p].isDigit)
+    while (p < s.length && s[p].isDigit)
     {
         p++;
     }
@@ -232,7 +232,7 @@ public:
         }
         catch (DCException e)
         {
-            put(this.o, e.to!string ~ "\n");
+            put(this.o, e.message ~ "\n");
         }
     }
 }
