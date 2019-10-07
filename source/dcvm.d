@@ -1,8 +1,11 @@
 module dcvm;
 
+import std.conv;
 import std.stdio;
+import std.format;
 import std.typecons;
 import std.ascii;
+import std.range;
 import dcnum;
 
 Tuple!(long, DCNum) parseNumber(string s, long p)
@@ -58,6 +61,8 @@ public:
     {
         return this.v.toString;
     }
+
+    alias v this;
 }
 
 class DCStack
@@ -66,9 +71,14 @@ private:
     DCValue[] stack;
     long p;
 public:
-    this()
+    this(uint stack_size)
+    in
     {
-        this.stack = new DCValue[](128);
+        assert(stack_size > 0);
+    }
+    do
+    {
+        this.stack = new DCValue[](stack_size);
         this.p = 0;
     }
 
@@ -90,24 +100,39 @@ public:
         return this.stack[--this.p];
     }
 
-    DCValue top()
+    DCValue top(uint n = 0)
     {
-        if (this.p == 0)
+        if (this.p - n <= 0)
         {
             throw new DCException("stack is empty");
         }
-        return this.stack[this.p - 1];
+        return this.stack[this.p - n - 1];
     }
 }
 
-class DCVM
+auto newVM(R)(R o = &write!char, uint scale = 0, uint default_stack_size = 128)
+{
+    return new DCVM!(R)(o, scale, default_stack_size);
+}
+
+class DCVM(R) if (isOutputRange!(R, char))
 {
 private:
     DCStack stack;
+    uint scale;
+    R o;
 public:
-    this()
+    this(R o, uint scale = 0, uint default_stack_size = 128)
+    in
     {
-        this.stack = new DCStack();
+        assert(default_stack_size > 0);
+    }
+
+    do
+    {
+        this.stack = new DCStack(default_stack_size);
+        this.scale = scale;
+        this.o = o;
     }
 
     void evalLine(string line)
@@ -139,7 +164,59 @@ public:
 
                 case 'p':
                     p++;
-                    writeln(this.stack.top);
+                    put(this.o, this.stack.top.to!string ~ "\n");
+                    break;
+
+                case '+':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x + y));
+                    break;
+
+                case '-':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x - y));
+                    break;
+
+                case '*':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x * y));
+                    break;
+
+                case '/':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x.div(y, this.scale)));
                     break;
                 case ' ':
                 case '\t':
@@ -147,7 +224,7 @@ public:
                     p++;
                     break;
                 default:
-                    writefln("[%c](%x) is unimplemented", p, p);
+                    put(this.o, "[%c](%x) is unimplemented\n".format(p, p));
                     p++;
                     break;
                 }
@@ -155,8 +232,12 @@ public:
         }
         catch (DCException e)
         {
-            writeln(e);
+            put(this.o, e.to!string ~ "\n");
         }
     }
+}
+
+unittest
+{
 
 }

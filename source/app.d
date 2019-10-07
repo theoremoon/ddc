@@ -42,8 +42,7 @@ void main(string[] args)
         stderr.writeln(HELPMESSAGE);
         exit(1);
     }
-    auto vm = new DCVM();
-
+    auto vm = newVM();
     foreach (f; files ~ args[1 .. $])
     {
         foreach (line; File(f).byLine)
