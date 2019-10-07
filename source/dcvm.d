@@ -110,7 +110,12 @@ public:
     }
 }
 
-auto newVM(R)(R o = &write!char, uint scale = 0, uint default_stack_size = 128)
+auto newVM(R = typeof(&write!char))(uint scale = 0, uint default_stack_size = 128)
+{
+    return new DCVM!(R)(&write!char, scale, default_stack_size);
+}
+
+auto newVM(R)(R o, uint scale = 0, uint default_stack_size = 128)
 {
     return new DCVM!(R)(o, scale, default_stack_size);
 }
@@ -138,7 +143,6 @@ public:
     void evalLine(string line)
     {
         long p = 0;
-
         try
         {
             while (p < line.length)
@@ -161,7 +165,6 @@ public:
                     p = r[0];
                     this.stack.push(new DCNumber(r[1]));
                     break;
-
                 case 'p':
                     p++;
                     put(this.o, this.stack.top.to!string ~ "\n");
@@ -179,7 +182,6 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x + y));
                     break;
-
                 case '-':
                     p++;
                     auto x = cast(DCNumber) this.stack.top(1);
@@ -192,7 +194,6 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x - y));
                     break;
-
                 case '*':
                     p++;
                     auto x = cast(DCNumber) this.stack.top(1);
@@ -205,7 +206,6 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x * y));
                     break;
-
                 case '/':
                     p++;
                     auto x = cast(DCNumber) this.stack.top(1);
@@ -239,5 +239,26 @@ public:
 
 unittest
 {
+    import std.outbuffer;
 
+    auto buf = new OutBuffer();
+    auto vm = newVM!(typeof(buf))(buf);
+
+    alias TestCase = Tuple!(string, "testcase", string, "expect");
+    auto testcases = [
+        TestCase("10000 p", "10000\n"), TestCase("_100.0 p", "-100.0\n"),
+        TestCase("1 1 + p", "2\n"), TestCase("1.0 1 + p", "2.0\n"),
+        TestCase("1 2 -  p", "-1\n"), TestCase("2 1 -  p", "1\n"),
+        TestCase("3 2 *  p", "6\n"), TestCase("_2 1.60 *  p", "-3.20\n"),
+        TestCase("3 2 /  p", "1\n"), TestCase("_2 1.60 /  p", "-1\n"),
+    ];
+
+    foreach (t; testcases)
+    {
+        buf.clear();
+        vm.evalLine(t.testcase);
+        auto got = buf.toString();
+        assert(got == t.expect,
+                "Case %s: expected [%s], got [%s]".format(t.testcase, t.expect, got));
+    }
 }
