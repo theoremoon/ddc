@@ -108,6 +108,16 @@ public:
         }
         return this.stack[this.p - n - 1];
     }
+
+    DCValue[] opSlice()(int start, int end)
+    {
+        return this.stack[start .. end];
+    }
+
+    int opDollar()
+    {
+        return cast(int) this.p;
+    }
 }
 
 auto newVM(R = typeof(&write!char))(uint scale = 0, uint default_stack_size = 128)
@@ -230,6 +240,13 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x.mod(y, this.scale)));
                     break;
+                case 'f':
+                    p++;
+                    foreach_reverse (t; this.stack[0 .. $])
+                    {
+                        put(this.o, t.to!string ~ "\n");
+                    }
+                    break;
                 case ' ':
                 case '\t':
                 case '\r':
@@ -253,9 +270,6 @@ unittest
 {
     import std.outbuffer;
 
-    auto buf = new OutBuffer();
-    auto vm = newVM!(typeof(buf))(buf);
-
     alias TestCase = Tuple!(string, "testcase", string, "expect");
     auto testcases = [
         TestCase("10000 p", "10000\n"), TestCase("_100.0 p", "-100.0\n"),
@@ -264,11 +278,12 @@ unittest
         TestCase("3 2 *  p", "6\n"), TestCase("_2 1.60 *  p", "-3.20\n"),
         TestCase("3 2 /  p", "1\n"), TestCase("_2 1.60 /  p", "-1\n"),
         TestCase("3 2 %  p", "1\n"), TestCase("_2 1.60 %  p", "-0.40\n"),
+        TestCase("1 2 3f", "3\n2\n1\n"), TestCase("1 2 3+f", "5\n1\n"),
     ];
-
     foreach (t; testcases)
     {
-        buf.clear();
+        auto buf = new OutBuffer();
+        auto vm = newVM!(typeof(buf))(buf);
         vm.evalLine(t.testcase);
         auto got = buf.toString();
         assert(got == t.expect,
