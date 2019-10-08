@@ -240,6 +240,14 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x.mod(y, this.scale)));
                     break;
+                case 'v':
+                    p++;
+                    auto xx = cast(DCNumber) this.stack.top(0);
+                    auto x = xx.sqrt(this.scale);
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x));
+                    break;
+
                 case 'f':
                     p++;
                     foreach_reverse (t; this.stack[0 .. $])
@@ -247,6 +255,17 @@ public:
                         put(this.o, t.to!string ~ "\n");
                     }
                     break;
+                    /*
+                case 'k':
+                    p++;
+                    auto k = cast(DCNumber) this.stack.pop();
+                    if (k is null || k < DCNum(0))
+                    {
+                        throw new DCException("scale must be a nonnegative number");
+                    }
+                    this.scale = k;
+                    break;
+                    */
                 case ' ':
                 case '\t':
                 case '\r':
@@ -279,6 +298,7 @@ unittest
         TestCase("3 2 /  p", "1\n"), TestCase("_2 1.60 /  p", "-1\n"),
         TestCase("3 2 %  p", "1\n"), TestCase("_2 1.60 %  p", "-0.40\n"),
         TestCase("1 2 3f", "3\n2\n1\n"), TestCase("1 2 3+f", "5\n1\n"),
+        TestCase("4 vp", "2\n"), TestCase("2 vp", "1\n"),
     ];
     foreach (t; testcases)
     {
