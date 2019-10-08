@@ -3,7 +3,7 @@
 		"user"
 	],
 	"dependencies": {
-		"dcnum": "~>0.0.5"
+		"dcnum": "~master"
 	},
 	"description": "A minimal D application.",
 	"license": "proprietary",

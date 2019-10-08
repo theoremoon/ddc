@@ -218,6 +218,18 @@ public:
                     this.stack.pop();
                     this.stack.push(new DCNumber(x.div(y, this.scale)));
                     break;
+                case '%':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x.mod(y, this.scale)));
+                    break;
                 case ' ':
                 case '\t':
                 case '\r':
@@ -251,6 +263,7 @@ unittest
         TestCase("1 2 -  p", "-1\n"), TestCase("2 1 -  p", "1\n"),
         TestCase("3 2 *  p", "6\n"), TestCase("_2 1.60 *  p", "-3.20\n"),
         TestCase("3 2 /  p", "1\n"), TestCase("_2 1.60 /  p", "-1\n"),
+        TestCase("3 2 %  p", "1\n"), TestCase("_2 1.60 %  p", "-0.40\n"),
     ];
 
     foreach (t; testcases)
