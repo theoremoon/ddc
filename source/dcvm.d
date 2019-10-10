@@ -255,7 +255,6 @@ public:
                         put(this.o, t.to!string ~ "\n");
                     }
                     break;
-                    /*
                 case 'k':
                     p++;
                     auto k = cast(DCNumber) this.stack.pop();
@@ -263,9 +262,8 @@ public:
                     {
                         throw new DCException("scale must be a nonnegative number");
                     }
-                    this.scale = k;
+                    this.scale = k.to!uint;
                     break;
-                    */
                 case ' ':
                 case '\t':
                 case '\r':
@@ -299,6 +297,8 @@ unittest
         TestCase("3 2 %  p", "1\n"), TestCase("_2 1.60 %  p", "-0.40\n"),
         TestCase("1 2 3f", "3\n2\n1\n"), TestCase("1 2 3+f", "5\n1\n"),
         TestCase("4 vp", "2\n"), TestCase("2 vp", "1\n"),
+        TestCase("2k1 2.0*p", "2.0\n"), TestCase("5k10.0 1.25/p", "8.00000\n"),
+        TestCase("_2k", "scale must be a nonnegative number\n"),
     ];
     foreach (t; testcases)
     {
