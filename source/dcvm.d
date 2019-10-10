@@ -270,7 +270,7 @@ public:
                     p++;
                     break;
                 default:
-                    put(this.o, "[%c](%x) is unimplemented\n".format(p, p));
+                    put(this.o, "[%c](%x) is unimplemented\n".format(line[p], p));
                     p++;
                     break;
                 }
