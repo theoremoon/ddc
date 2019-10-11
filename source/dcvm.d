@@ -248,6 +248,19 @@ public:
                     this.stack.push(new DCNumber(x));
                     break;
 
+                case '^':
+                    p++;
+                    auto x = cast(DCNumber) this.stack.top(1);
+                    auto y = cast(DCNumber) this.stack.top(0);
+                    if (x is null || y is null)
+                    {
+                        throw new DCException("non-numeric value");
+                    }
+                    this.stack.pop();
+                    this.stack.pop();
+                    this.stack.push(new DCNumber(x.raise(y.to!long, this.scale)));
+                    break;
+
                 case 'f':
                     p++;
                     foreach_reverse (t; this.stack[0 .. $])
@@ -299,6 +312,8 @@ unittest
         TestCase("4 vp", "2\n"), TestCase("2 vp", "1\n"),
         TestCase("2k1 2.0*p", "2.0\n"), TestCase("5k10.0 1.25/p", "8.00000\n"),
         TestCase("_2k", "scale must be a nonnegative number\n"),
+        TestCase("2k2 3^p", "8\n"), TestCase("2k2 1.5^p", "2\n"),
+        TestCase("2k2 _1^p", "0.50\n"),
     ];
     foreach (t; testcases)
     {
